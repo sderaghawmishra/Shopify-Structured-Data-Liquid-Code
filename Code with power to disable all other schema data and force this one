@@ -1,0 +1,60 @@
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('script[type="application/ld+json"]').forEach(script => {
+        if (!script.innerText.includes('"identifier": "custom-product-schema-v1"')) {
+            script.remove();
+        }
+    });
+});
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "Product",
+  "identifier": "custom-product-schema-v1",  // <-- Unique identifier
+  "name": "{{ product.title | escape }}",
+  "image": [{% for image in product.images %}"{{ image.src | img_url: '1024x1024' }}"{% if forloop.last == false %}, {% endif %}{% endfor %}],
+  "description": "{{ product.description | strip_html | escape }}",
+  "brand": {
+    "@type": "Brand",
+    "name": "{{ product.vendor | escape }}"
+  },
+  "sku": "{{ product.sku }}",
+  "offers": {
+    "@type": "Offer",
+    "url": "{{ shop.url }}{{ product.url }}",
+    "priceCurrency": "{{ cart.currency.iso_code }}",
+    "price": "{{ product.price | divided_by: 100.0 }}",
+    "itemCondition": "https://schema.org/NewCondition",
+    "availability": "{% if product.available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
+    "seller": {
+      "@type": "Organization",
+      "name": "{{ shop.name }}"
+    },
+    "priceValidUntil": "{{ 'now' | date: '%Y-%m-%d' | append: 'T23:59:59Z' }}",
+
+    "shippingDetails": {
+      "@type": "OfferShippingDetails",
+      "shippingRate": {
+        "@type": "MonetaryAmount",
+        "value": "0.00",
+        "currency": "{{ cart.currency.iso_code }}"
+      },
+      "shippingDestination": {
+        "@type": "DefinedRegion",
+        "addressCountry": "{{ shop.default_country | default: 'US' }}"
+      }
+    },
+
+    "hasMerchantReturnPolicy": {
+      "@type": "MerchantReturnPolicy",
+      "name": "Return Policy",
+      "url": "{{ shop.url }}/policies/refund-policy",
+      "merchantReturnDays": 30,
+      "returnFees": "FreeReturn",
+      "returnMethod": "ReturnByMail",
+      "applicableCountry": "{{ shop.default_country | default: 'US' }}"
+    }
+  }
+}
+</script>
